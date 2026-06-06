@@ -1,10 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { SAVORY_RECIPES, SWEET_RECIPES, pickRandom } from "@/lib/recipes";
+import { SAVORY_RECIPES, SWEET_RECIPES } from "@/lib/recipes";
 import heroImg from "@/assets/festa-hero.jpg";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Confirmation = {
   id: string;
@@ -21,8 +28,9 @@ export const Route = createFileRoute("/")({
 function Index() {
   const [list, setList] = useState<Confirmation[]>([]);
   const [name, setName] = useState("");
+  const [sweetDish, setSweetDish] = useState("");
+  const [savoryDish, setSavoryDish] = useState("");
   const [loading, setLoading] = useState(false);
-  const [justAssigned, setJustAssigned] = useState<Confirmation | null>(null);
 
   useEffect(() => {
     supabase
@@ -60,21 +68,40 @@ function Index() {
       toast.error("Nome muito grande — abrevia aí.");
       return;
     }
+    if (!sweetDish) {
+      toast.error("Escolhe um prato doce!");
+      return;
+    }
+    if (!savoryDish) {
+      toast.error("Escolhe um prato salgado!");
+      return;
+    }
+    if (sweetTaken.has(sweetDish)) {
+      toast.error(`Alguém já escolheu "${sweetDish}". Escolhe outro doce!`);
+      return;
+    }
+    if (savoryTaken.has(savoryDish)) {
+      toast.error(`Alguém já escolheu "${savoryDish}". Escolhe outro salgado!`);
+      return;
+    }
+
     setLoading(true);
-    const sweet = pickRandom(SWEET_RECIPES, sweetTaken);
-    const savory = pickRandom(SAVORY_RECIPES, savoryTaken);
     const { data, error } = await supabase
       .from("confirmations")
-      .insert({ name: trimmed, sweet_dish: sweet, savory_dish: savory })
+      .insert({ name: trimmed, sweet_dish: sweetDish, savory_dish: savoryDish })
       .select()
       .single();
     setLoading(false);
+
     if (error || !data) {
       toast.error("Não foi possível confirmar. Tenta de novo.");
       return;
     }
-    setJustAssigned(data as Confirmation);
+
+    toast.success(`Confirmado! ${trimmed} vai trazer ${sweetDish} e ${savoryDish}.`);
     setName("");
+    setSweetDish("");
+    setSavoryDish("");
   }
 
   return (
@@ -100,7 +127,7 @@ function Index() {
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-base md:text-lg text-foreground/80">
             Cada um (ou casal) leva <strong>um prato doce</strong> e <strong>um salgado</strong>.
-            Confirma sua presença e o site sorteia o que você vai trazer.
+            Confirma sua presença e escolha o que vai trazer.
           </p>
         </div>
       </header>
@@ -120,24 +147,63 @@ function Index() {
                 className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
               />
             </label>
+
+            <div className="space-y-1">
+              <span className="text-sm font-semibold">Prato doce 🍮</span>
+              <Select value={sweetDish} onValueChange={setSweetDish}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Escolha um doce" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SWEET_RECIPES.map((dish) => {
+                    const taken = sweetTaken.has(dish);
+                    return (
+                      <SelectItem
+                        key={dish}
+                        value={dish}
+                        disabled={taken}
+                        className={taken ? "opacity-40 line-through" : ""}
+                      >
+                        {dish} {taken ? "(já escolhido)" : ""}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1">
+              <span className="text-sm font-semibold">Prato salgado 🌭</span>
+              <Select value={savoryDish} onValueChange={setSavoryDish}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Escolha um salgado" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SAVORY_RECIPES.map((dish) => {
+                    const taken = savoryTaken.has(dish);
+                    return (
+                      <SelectItem
+                        key={dish}
+                        value={dish}
+                        disabled={taken}
+                        className={taken ? "opacity-40 line-through" : ""}
+                      >
+                        {dish} {taken ? "(já escolhido)" : ""}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
               className="w-full rounded-lg bg-primary px-4 py-3 text-base font-bold text-primary-foreground shadow hover:bg-primary/90 disabled:opacity-60"
             >
-              {loading ? "Sorteando…" : "Confirmar presença 🎉"}
+              {loading ? "Confirmando…" : "Confirmar presença 🎉"}
             </button>
           </form>
-
-          {justAssigned && (
-            <div className="mt-6 rounded-xl bg-secondary p-4 text-secondary-foreground">
-              <p className="text-sm">Pronto, <strong>{justAssigned.name}</strong>! Você vai trazer:</p>
-              <ul className="mt-2 space-y-1 text-lg">
-                <li>🍮 <strong>Doce:</strong> {justAssigned.sweet_dish}</li>
-                <li>🌭 <strong>Salgado:</strong> {justAssigned.savory_dish}</li>
-              </ul>
-            </div>
-          )}
         </section>
 
         {/* List */}
