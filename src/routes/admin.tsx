@@ -360,54 +360,86 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
 function DishCard({
   title,
   dishes,
-  enabled,
-  onToggle,
+  confirmations,
+  type,
+  onAdd,
+  onRemove,
 }: {
   title: string;
   dishes: string[];
-  enabled: Set<string>;
-  onToggle: (dish: string) => void;
+  confirmations: Confirmation[];
+  type: "sweet" | "savory";
+  onAdd: (dish: string) => void;
+  onRemove: (dish: string) => void;
 }) {
-  const enabledCount = dishes.filter((d) => enabled.has(d)).length;
+  const [newDish, setNewDish] = useState("");
+  const takenSet = new Set(
+    confirmations.map((c) => (type === "sweet" ? c.sweet_dish : c.savory_dish)),
+  );
+
+  function submitAdd(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newDish.trim()) return;
+    onAdd(newDish);
+    setNewDish("");
+  }
 
   return (
     <section className="rounded-2xl border-2 border-dashed border-primary/30 bg-card p-6 shadow-sm">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-xl text-primary">{title}</h2>
         <span className="text-xs text-muted-foreground bg-muted rounded-full px-2 py-0.5">
-          {enabledCount}/{dishes.length} ativos
+          {dishes.length} pratos
         </span>
       </div>
-      <ul className="space-y-2">
-        {dishes.map((dish) => {
-          const on = enabled.has(dish);
-          return (
-            <li key={dish}>
-              <button
-                onClick={() => onToggle(dish)}
-                className={`w-full flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-all border ${
-                  on
-                    ? "bg-primary/10 border-primary/30 text-foreground"
-                    : "bg-muted/50 border-border/50 text-muted-foreground line-through opacity-60"
-                }`}
+
+      <form onSubmit={submitAdd} className="mb-3 flex gap-2">
+        <input
+          value={newDish}
+          onChange={(e) => setNewDish(e.target.value)}
+          placeholder="Adicionar novo prato…"
+          maxLength={60}
+          className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+        />
+        <button
+          type="submit"
+          className="rounded-lg bg-primary px-3 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/90"
+        >
+          + Adicionar
+        </button>
+      </form>
+
+      {dishes.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Nenhum prato cadastrado.</p>
+      ) : (
+        <ul className="space-y-2">
+          {dishes.map((dish) => {
+            const taken = takenSet.has(dish);
+            return (
+              <li
+                key={dish}
+                className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/30 px-3 py-2 text-sm"
               >
-                <span>{dish}</span>
-                <span
-                  className={`inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                    on ? "bg-primary" : "bg-border"
-                  }`}
-                >
-                  <span
-                    className={`h-4 w-4 rounded-full bg-white shadow transition-transform ${
-                      on ? "translate-x-4" : "translate-x-0.5"
-                    }`}
-                  />
+                <span className="font-medium">
+                  {dish}
+                  {taken && (
+                    <span className="ml-2 text-xs text-muted-foreground">(escolhido)</span>
+                  )}
                 </span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+                <button
+                  onClick={() => onRemove(dish)}
+                  disabled={taken}
+                  title={taken ? "Já foi escolhido" : "Remover"}
+                  className="rounded-full w-7 h-7 flex items-center justify-center text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                >
+                  ✕
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </section>
   );
 }
+
