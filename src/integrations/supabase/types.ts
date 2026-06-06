@@ -38,6 +38,36 @@ export type Database = {
         }
         Relationships: []
       }
+      event_config: {
+        Row: {
+          event_date: string | null
+          event_location: string | null
+          event_time: string | null
+          id: number
+          savory_dishes: string[]
+          sweet_dishes: string[]
+          updated_at: string
+        }
+        Insert: {
+          event_date?: string | null
+          event_location?: string | null
+          event_time?: string | null
+          id?: number
+          savory_dishes?: string[]
+          sweet_dishes?: string[]
+          updated_at?: string
+        }
+        Update: {
+          event_date?: string | null
+          event_location?: string | null
+          event_time?: string | null
+          id?: number
+          savory_dishes?: string[]
+          sweet_dishes?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
