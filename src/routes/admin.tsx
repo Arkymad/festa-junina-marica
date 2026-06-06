@@ -121,8 +121,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [eventDate, setEventDate] = useState("");
   const [eventTime, setEventTime] = useState("");
   const [eventLocation, setEventLocation] = useState("");
-  const [sweetEnabled, setSweetEnabled] = useState<Set<string>>(new Set());
-  const [savoryEnabled, setSavoryEnabled] = useState<Set<string>>(new Set());
+  const [sweetDishes, setSweetDishes] = useState<string[]>([]);
+  const [savoryDishes, setSavoryDishes] = useState<string[]>([]);
 
   const loadConfig = useCallback(async () => {
     const { data } = await supabase
@@ -135,8 +135,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       setEventDate(cfg.event_date ?? "");
       setEventTime(cfg.event_time ?? "");
       setEventLocation(cfg.event_location ?? "");
-      setSweetEnabled(new Set(cfg.sweet_dishes));
-      setSavoryEnabled(new Set(cfg.savory_dishes));
+      setSweetDishes(cfg.sweet_dishes ?? []);
+      setSavoryDishes(cfg.savory_dishes ?? []);
     }
   }, []);
 
@@ -157,8 +157,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         event_date: eventDate || null,
         event_time: eventTime || null,
         event_location: eventLocation || null,
-        sweet_dishes: Array.from(sweetEnabled),
-        savory_dishes: Array.from(savoryEnabled),
+        sweet_dishes: sweetDishes,
+        savory_dishes: savoryDishes,
         updated_at: new Date().toISOString(),
       })
       .eq("id", 1);
@@ -182,21 +182,31 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     }
   }
 
-  function toggleDish(dish: string, type: "sweet" | "savory") {
-    if (type === "sweet") {
-      setSweetEnabled((prev) => {
-        const next = new Set(prev);
-        if (next.has(dish)) next.delete(dish); else next.add(dish);
-        return next;
-      });
-    } else {
-      setSavoryEnabled((prev) => {
-        const next = new Set(prev);
-        if (next.has(dish)) next.delete(dish); else next.add(dish);
-        return next;
-      });
+  function addDish(dish: string, type: "sweet" | "savory") {
+    const trimmed = dish.trim();
+    if (!trimmed) return;
+    const setter = type === "sweet" ? setSweetDishes : setSavoryDishes;
+    const current = type === "sweet" ? sweetDishes : savoryDishes;
+    if (current.some((d) => d.toLowerCase() === trimmed.toLowerCase())) {
+      toast.error(`"${trimmed}" já está na lista.`);
+      return;
     }
+    setter([...current, trimmed]);
   }
+
+  function removeDish(dish: string, type: "sweet" | "savory") {
+    const taken = confirmations.some(
+      (c) => (type === "sweet" ? c.sweet_dish : c.savory_dish) === dish,
+    );
+    if (taken) {
+      toast.error(`"${dish}" já foi escolhido por alguém. Remova a pessoa primeiro.`);
+      return;
+    }
+    const setter = type === "sweet" ? setSweetDishes : setSavoryDishes;
+    const current = type === "sweet" ? sweetDishes : savoryDishes;
+    setter(current.filter((d) => d !== dish));
+  }
+
 
   // Format date for display
   function fmtDate(d: string) {
