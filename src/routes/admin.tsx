@@ -286,17 +286,22 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         <div className="grid gap-6 md:grid-cols-2">
           <DishCard
             title="Pratos Doces 🍮"
-            dishes={ALL_SWEET}
-            enabled={sweetEnabled}
-            onToggle={(d) => toggleDish(d, "sweet")}
+            dishes={sweetDishes}
+            confirmations={confirmations}
+            type="sweet"
+            onAdd={(d) => addDish(d, "sweet")}
+            onRemove={(d) => removeDish(d, "sweet")}
           />
           <DishCard
             title="Pratos Salgados 🌭"
-            dishes={ALL_SAVORY}
-            enabled={savoryEnabled}
-            onToggle={(d) => toggleDish(d, "savory")}
+            dishes={savoryDishes}
+            confirmations={confirmations}
+            type="savory"
+            onAdd={(d) => addDish(d, "savory")}
+            onRemove={(d) => removeDish(d, "savory")}
           />
         </div>
+
 
         {/* ── Save button ── */}
         <button
