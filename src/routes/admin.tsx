@@ -4,36 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 
-// ─── All possible dishes (canonical list) ──────────────────────────────────
-const ALL_SWEET = [
-  "Canjica",
-  "Pé-de-moleque",
-  "Paçoca",
-  "Bolo de fubá",
-  "Curau",
-  "Arroz doce",
-  "Cocada",
-  "Pamonha doce",
-  "Quentão (doce)",
-  "Maçã do amor",
-  "Brigadeiro de paçoca",
-  "Bolo de milho",
-];
-
-const ALL_SAVORY = [
-  "Pipoca",
-  "Pamonha salgada",
-  "Milho cozido",
-  "Cachorro-quente",
-  "Pastel de forno",
-  "Caldo verde",
-  "Cuscuz paulista",
-  "Espetinho de carne",
-  "Pão de queijo",
-  "Empadinha de frango",
-  "Polenta frita",
-  "Linguiça na brasa",
-];
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type EventConfig = {
