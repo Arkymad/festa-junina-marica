@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { SAVORY_RECIPES, SWEET_RECIPES } from "@/lib/recipes";
 import heroImg from "@/assets/festa-hero.jpg";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
@@ -13,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// ─── Types ───────────────────────────────────────────────────────────────────
 type Confirmation = {
   id: string;
   name: string;
@@ -21,24 +21,62 @@ type Confirmation = {
   created_at: string;
 };
 
+type EventConfig = {
+  event_date: string | null;
+  event_time: string | null;
+  event_location: string | null;
+  sweet_dishes: string[];
+  savory_dishes: string[];
+};
+
 export const Route = createFileRoute("/")({
   component: Index,
 });
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+function formatDate(dateStr: string) {
+  // date comes as "YYYY-MM-DD"
+  const [y, m, d] = dateStr.split("-");
+  const months = [
+    "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+  ];
+  return `${Number(d)} de ${months[Number(m) - 1]} de ${y}`;
+}
+
+function formatTime(timeStr: string) {
+  // time comes as "HH:MM" or "HH:MM:SS"
+  return timeStr.slice(0, 5) + "h";
+}
+
+// ─── Component ───────────────────────────────────────────────────────────────
 function Index() {
   const [list, setList] = useState<Confirmation[]>([]);
+  const [config, setConfig] = useState<EventConfig | null>(null);
   const [name, setName] = useState("");
   const [sweetDish, setSweetDish] = useState("");
   const [savoryDish, setSavoryDish] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Load event config + confirmations
   useEffect(() => {
+    // Event config
+    supabase
+      .from("event_config")
+      .select("*")
+      .single()
+      .then(({ data }) => {
+        if (data) setConfig(data as EventConfig);
+      });
+
+    // Confirmations
     supabase
       .from("confirmations")
       .select("*")
       .order("created_at", { ascending: false })
       .then(({ data }) => setList((data as Confirmation[]) ?? []));
 
+    // Real-time new confirmations
     const channel = supabase
       .channel("confirmations")
       .on(
@@ -49,13 +87,31 @@ function Index() {
         },
       )
       .subscribe();
+
+    // Real-time config updates
+    const configChannel = supabase
+      .channel("event_config")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "event_config" },
+        (payload) => {
+          setConfig(payload.new as EventConfig);
+        },
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(configChannel);
     };
   }, []);
 
   const sweetTaken = useMemo(() => new Set(list.map((c) => c.sweet_dish)), [list]);
   const savoryTaken = useMemo(() => new Set(list.map((c) => c.savory_dish)), [list]);
+
+  // Available dishes come from config (fallback to empty while loading)
+  const sweetDishes = config?.sweet_dishes ?? [];
+  const savoryDishes = config?.savory_dishes ?? [];
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -98,11 +154,13 @@ function Index() {
       return;
     }
 
-    toast.success(`Confirmado! ${trimmed} vai trazer ${sweetDish} e ${savoryDish}.`);
+    toast.success(`Confirmado! ${trimmed} vai trazer ${sweetDish} e ${savoryDish}. 🎉`);
     setName("");
     setSweetDish("");
     setSavoryDish("");
   }
+
+  const hasEventInfo = config?.event_date || config?.event_time || config?.event_location;
 
   return (
     <div className="min-h-screen">
@@ -118,7 +176,7 @@ function Index() {
           alt="Bandeirinhas e fogueira de festa junina"
           className="absolute inset-0 h-full w-full object-cover opacity-30"
         />
-        <div className="relative mx-auto max-w-4xl px-6 py-16 text-center">
+        <div className="relative mx-auto max-w-4xl px-6 py-14 text-center">
           <p className="text-sm font-bold uppercase tracking-widest text-primary">
             🌽 Arraiá da Galera 🔥
           </p>
@@ -129,6 +187,27 @@ function Index() {
             Cada um (ou casal) leva <strong>um prato doce</strong> e <strong>um salgado</strong>.
             Confirma sua presença e escolha o que vai trazer.
           </p>
+
+          {/* Event info pill */}
+          {hasEventInfo && (
+            <div className="mt-6 inline-flex flex-wrap items-center justify-center gap-x-5 gap-y-2 rounded-2xl border-2 border-dashed border-primary/50 bg-card/80 backdrop-blur px-6 py-3 text-sm font-semibold text-foreground shadow">
+              {config?.event_date && (
+                <span className="flex items-center gap-1.5">
+                  📅 {formatDate(config.event_date)}
+                </span>
+              )}
+              {config?.event_time && (
+                <span className="flex items-center gap-1.5">
+                  🕐 {formatTime(config.event_time)}
+                </span>
+              )}
+              {config?.event_location && (
+                <span className="flex items-center gap-1.5">
+                  📍 {config.event_location}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </header>
 
@@ -152,10 +231,10 @@ function Index() {
               <span className="text-sm font-semibold">Prato doce 🍮</span>
               <Select value={sweetDish} onValueChange={setSweetDish}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Escolha um doce" />
+                  <SelectValue placeholder={sweetDishes.length === 0 ? "Carregando…" : "Escolha um doce"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {SWEET_RECIPES.map((dish) => {
+                  {sweetDishes.map((dish) => {
                     const taken = sweetTaken.has(dish);
                     return (
                       <SelectItem
@@ -176,10 +255,10 @@ function Index() {
               <span className="text-sm font-semibold">Prato salgado 🌭</span>
               <Select value={savoryDish} onValueChange={setSavoryDish}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Escolha um salgado" />
+                  <SelectValue placeholder={savoryDishes.length === 0 ? "Carregando…" : "Escolha um salgado"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {SAVORY_RECIPES.map((dish) => {
+                  {savoryDishes.map((dish) => {
                     const taken = savoryTaken.has(dish);
                     return (
                       <SelectItem
