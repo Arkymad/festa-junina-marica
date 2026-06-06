@@ -28,8 +28,3 @@ export const SAVORY_RECIPES = [
   "Linguiça na brasa",
 ] as const;
 
-export function pickRandom<T>(list: readonly T[], exclude: Set<string> = new Set()): T {
-  const available = list.filter((item) => !exclude.has(String(item)));
-  const pool = available.length > 0 ? available : list;
-  return pool[Math.floor(Math.random() * pool.length)];
-}
