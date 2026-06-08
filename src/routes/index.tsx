@@ -134,12 +134,8 @@ function Index() {
       toast.error("Nome muito grande — abrevia aí.");
       return;
     }
-    if (selectedSweets.length === 0) {
-      toast.error("Escolhe pelo menos um prato doce!");
-      return;
-    }
-    if (selectedSavories.length === 0) {
-      toast.error("Escolhe pelo menos um prato salgado!");
+    if (selectedSweets.length + selectedSavories.length < 2) {
+      toast.error("Escolhe pelo menos 2 pratos (doces e/ou salgados)!");
       return;
     }
     const conflictSweet = selectedSweets.find((d) => sweetTaken.has(d));
@@ -158,8 +154,8 @@ function Index() {
       .from("confirmations")
       .insert({
         name: trimmed,
-        sweet_dish: selectedSweets[0],
-        savory_dish: selectedSavories[0],
+        sweet_dish: selectedSweets[0] ?? null,
+        savory_dish: selectedSavories[0] ?? null,
         sweet_dishes: selectedSweets,
         savory_dishes: selectedSavories,
       })
@@ -200,7 +196,7 @@ function Index() {
             Vem pro forró!
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-base md:text-lg text-foreground/80">
-            Cada um (ou casal) leva <strong>um ou mais pratos doces</strong> e <strong>salgados</strong>.
+            Cada um (ou casal) leva <strong>pelo menos 2 pratos</strong> — doces, salgados ou um de cada.
             Confirme sua presença e escolha o que vai trazer.
           </p>
 
