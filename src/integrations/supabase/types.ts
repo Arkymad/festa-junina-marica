@@ -19,22 +19,28 @@ export type Database = {
           created_at: string
           id: string
           name: string
-          savory_dish: string
-          sweet_dish: string
+          savory_dish: string | null
+          savory_dishes: string[]
+          sweet_dish: string | null
+          sweet_dishes: string[]
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
-          savory_dish: string
-          sweet_dish: string
+          savory_dish?: string | null
+          savory_dishes?: string[]
+          sweet_dish?: string | null
+          sweet_dishes?: string[]
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
-          savory_dish?: string
-          sweet_dish?: string
+          savory_dish?: string | null
+          savory_dishes?: string[]
+          sweet_dish?: string | null
+          sweet_dishes?: string[]
         }
         Relationships: []
       }
