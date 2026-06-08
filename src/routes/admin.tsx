@@ -154,15 +154,15 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     setSaving(true);
     const { error } = await supabase
       .from("event_config")
-      .update({
+      .upsert({
+        id: 1,
         event_date: eventDate || null,
         event_time: eventTime || null,
         event_location: eventLocation || null,
         sweet_dishes: sweetDishes,
         savory_dishes: savoryDishes,
         updated_at: new Date().toISOString(),
-      })
-      .eq("id", 1);
+      }, { onConflict: "id" });
     setSaving(false);
 
     if (error) {
