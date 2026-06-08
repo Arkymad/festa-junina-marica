@@ -128,7 +128,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     const { data } = await supabase
       .from("event_config")
       .select("*")
-      .single();
+      .eq("id", 1)
+      .maybeSingle();
     if (data) {
       const cfg = data as EventConfig;
       setConfig(cfg);
