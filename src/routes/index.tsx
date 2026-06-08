@@ -134,12 +134,8 @@ function Index() {
       toast.error("Nome muito grande — abrevia aí.");
       return;
     }
-    if (selectedSweets.length === 0) {
-      toast.error("Escolhe pelo menos um prato doce!");
-      return;
-    }
-    if (selectedSavories.length === 0) {
-      toast.error("Escolhe pelo menos um prato salgado!");
+    if (selectedSweets.length + selectedSavories.length < 2) {
+      toast.error("Escolhe pelo menos 2 pratos (doces e/ou salgados)!");
       return;
     }
     const conflictSweet = selectedSweets.find((d) => sweetTaken.has(d));
