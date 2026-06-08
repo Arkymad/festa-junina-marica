@@ -217,9 +217,14 @@ function Index() {
                 </span>
               )}
               {config?.event_location && (
-                <span className="flex items-center gap-1.5">
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(config.event_location)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 hover:text-primary underline-offset-2 hover:underline"
+                >
                   📍 {config.event_location}
-                </span>
+                </a>
               )}
             </div>
           )}
