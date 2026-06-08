@@ -154,8 +154,8 @@ function Index() {
       .from("confirmations")
       .insert({
         name: trimmed,
-        sweet_dish: selectedSweets[0],
-        savory_dish: selectedSavories[0],
+        sweet_dish: selectedSweets[0] ?? null,
+        savory_dish: selectedSavories[0] ?? null,
         sweet_dishes: selectedSweets,
         savory_dishes: selectedSavories,
       })
