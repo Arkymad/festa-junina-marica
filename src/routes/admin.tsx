@@ -17,10 +17,21 @@ type EventConfig = {
 type Confirmation = {
   id: string;
   name: string;
-  sweet_dish: string;
-  savory_dish: string;
+  sweet_dish: string | null;
+  savory_dish: string | null;
+  sweet_dishes: string[];
+  savory_dishes: string[];
   created_at: string;
 };
+
+function allSweet(c: Confirmation): string[] {
+  const arr = c.sweet_dishes ?? [];
+  return arr.length ? arr : c.sweet_dish ? [c.sweet_dish] : [];
+}
+function allSavory(c: Confirmation): string[] {
+  const arr = c.savory_dishes ?? [];
+  return arr.length ? arr : c.savory_dish ? [c.savory_dish] : [];
+}
 
 export const Route = createFileRoute("/admin")({
   component: AdminPage,
@@ -196,8 +207,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   }
 
   function removeDish(dish: string, type: "sweet" | "savory") {
-    const taken = confirmations.some(
-      (c) => (type === "sweet" ? c.sweet_dish : c.savory_dish) === dish,
+    const taken = confirmations.some((c) =>
+      (type === "sweet" ? allSweet(c) : allSavory(c)).includes(dish),
     );
     if (taken) {
       toast.error(`"${dish}" já foi escolhido por alguém. Remova a pessoa primeiro.`);
@@ -332,7 +343,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                   <div>
                     <p className="font-bold leading-tight">{c.name}</p>
                     <p className="text-sm text-foreground/70">
-                      🍮 {c.sweet_dish} · 🌭 {c.savory_dish}
+                      🍮 {allSweet(c).join(", ") || "—"} · 🌭 {allSavory(c).join(", ") || "—"}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(c.created_at).toLocaleString("pt-BR")}
@@ -375,7 +386,7 @@ function DishCard({
 }) {
   const [newDish, setNewDish] = useState("");
   const takenSet = new Set(
-    confirmations.map((c) => (type === "sweet" ? c.sweet_dish : c.savory_dish)),
+    confirmations.flatMap((c) => (type === "sweet" ? allSweet(c) : allSavory(c))),
   );
 
   function submitAdd(e: React.FormEvent) {
