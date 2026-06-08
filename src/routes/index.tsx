@@ -231,6 +231,21 @@ function Index() {
         </div>
       </header>
 
+          {config?.event_location && (
+            <div className="mx-auto mt-6 max-w-2xl overflow-hidden rounded-2xl border-2 border-dashed border-primary/40 shadow">
+              <iframe
+                title="Mapa do local da festa"
+                src={`https://www.google.com/maps?q=${encodeURIComponent(config.event_location)}&output=embed`}
+                className="h-64 w-full border-0"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                allowFullScreen
+              />
+            </div>
+          )}
+        </div>
+      </header>
+
       <main className="mx-auto grid max-w-5xl gap-8 px-6 pb-20 md:grid-cols-2">
         <section className="rounded-2xl border-2 border-dashed border-primary/40 bg-card p-6 shadow-sm">
           <h2 className="text-3xl text-primary">Confirma aí, cumpadi!</h2>
