@@ -196,7 +196,7 @@ function Index() {
             Vem pro forró!
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-base md:text-lg text-foreground/80">
-            Cada um (ou casal) leva <strong>pelo menos 2 pratos</strong> — doces, salgados ou um de cada.
+            Cada um (ou casal) leva <strong>pelo menos 2 pratos</strong> — doces, salgados ou um de cada — e <strong>sua própria bebida</strong>.
             Confirme sua presença e escolha o que vai trazer.
           </p>
 
